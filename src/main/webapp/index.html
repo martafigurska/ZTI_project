@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Moje Przepisy</title>
+    <script>
+        async function loadRecipes() {
+            const response = await fetch('/ZTI-1.0-SNAPSHOT/api/recipes');
+            const recipes = await response.json();
+            const list = document.getElementById('recipe-list');
+            list.innerHTML = '';
+
+            recipes.forEach(recipe => {
+                const item = document.createElement('div');
+                item.innerHTML = `
+                <h3>${recipe.title}</h3>
+                <p>${recipe.description}</p>
+                <p>Lajki: ${recipe.likes}</p>
+                <button onclick="likeRecipe(${recipe.id})">Lajkuj</button>
+                <hr>
+            `;
+                list.appendChild(item);
+            });
+        }
+
+        async function likeRecipe(id) {
+            await fetch(`/ZTI-1.0-SNAPSHOT/api/recipes/${id}/like`, { method: 'POST' });
+            loadRecipes();
+        }
+
+        async function addRecipe(event) {
+            event.preventDefault();
+            const titleInput = document.getElementById('title');
+            const descriptionInput = document.getElementById('description');
+
+            const title = titleInput.value.trim();
+            const description = descriptionInput.value.trim();
+
+            if (!title || !description) {
+                alert("Proszę wypełnić oba pola!");
+                return;
+            }
+
+            const response = await fetch('/ZTI-1.0-SNAPSHOT/api/recipes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+
+            if (response.ok) {
+                titleInput.value = '';
+                descriptionInput.value = '';
+                // odśwież listę przepisów od razu po dodaniu
+                await loadRecipes();
+            } else {
+                alert("Coś poszło nie tak podczas dodawania przepisu.");
+            }
+        }
+
+
+        window.onload = loadRecipes;
+    </script>
+
+</head>
+<body>
+<h1>📒 Aplikacja Kulinarna</h1>
+
+<h2>➕ Dodaj przepis</h2>
+<form onsubmit="addRecipe(event)">
+    <input id="title" type="text" placeholder="Tytuł" required><br>
+    <textarea id="description" placeholder="Opis" required></textarea><br>
+    <button type="submit">Dodaj</button>
+</form>
+
+<h2>🍲 Przepisy</h2>
+<div id="recipe-list">Ładowanie...</div>
+</body>
+</html>
