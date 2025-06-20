@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <title>Moje Przepisy</title>
     <script>
+        let currentUser = null;
+
+        function updateUI() {
+            document.getElementById('user-info').textContent = currentUser
+                ? `Zalogowany jako: ${currentUser}`
+                : 'Nie jesteś zalogowany';
+            document.getElementById('add-recipe-form').style.display = currentUser ? 'block' : 'none';
+        }
+
         async function loadRecipes() {
             const response = await fetch('/ZTI-1.0-SNAPSHOT/api/recipes');
             const recipes = await response.json();
@@ -13,64 +22,154 @@
             recipes.forEach(recipe => {
                 const item = document.createElement('div');
                 item.innerHTML = `
-                <h3>${recipe.title}</h3>
-                <p>${recipe.description}</p>
-                <p>Lajki: ${recipe.likes}</p>
-                <button onclick="likeRecipe(${recipe.id})">Lajkuj</button>
-                <hr>
-            `;
+                    <h3>${recipe.title}</h3>
+                    <p>${recipe.description}</p>
+                    <p>Lajków: ${recipe.likedByUsers?.length || 0}</p>
+                    ${currentUser ? `<button onclick="likeRecipe(${recipe.id})">Lajkuj</button>` : ''}
+                    <hr>
+                `;
                 list.appendChild(item);
             });
         }
 
         async function likeRecipe(id) {
-            await fetch(`/ZTI-1.0-SNAPSHOT/api/recipes/${id}/like`, { method: 'POST' });
-            loadRecipes();
+            if (!currentUser) {
+                alert("Zaloguj się, aby lajkować.");
+                return;
+            }
+
+            const response = await fetch(`/ZTI-1.0-SNAPSHOT/api/recipes/${id}/like`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
+
+            if (response.ok) {
+                loadRecipes();
+            } else {
+                const text = await response.text();
+                alert("Błąd: " + text);
+            }
         }
 
         async function addRecipe(event) {
             event.preventDefault();
-            const titleInput = document.getElementById('title');
-            const descriptionInput = document.getElementById('description');
+            if (!currentUser) {
+                alert("Musisz być zalogowany, aby dodać przepis.");
+                return;
+            }
 
-            const title = titleInput.value.trim();
-            const description = descriptionInput.value.trim();
+            const title = document.getElementById('title').value.trim();
+            const description = document.getElementById('description').value.trim();
 
             if (!title || !description) {
-                alert("Proszę wypełnić oba pola!");
+                alert("Uzupełnij pola!");
                 return;
             }
 
             const response = await fetch('/ZTI-1.0-SNAPSHOT/api/recipes', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description })
+                body: JSON.stringify({
+                    title,
+                    description,
+                    author: { username: currentUser }
+                })
             });
 
             if (response.ok) {
-                titleInput.value = '';
-                descriptionInput.value = '';
-                // odśwież listę przepisów od razu po dodaniu
+                document.getElementById('title').value = '';
+                document.getElementById('description').value = '';
                 await loadRecipes();
             } else {
-                alert("Coś poszło nie tak podczas dodawania przepisu.");
+                const text = await response.text();
+                alert("Błąd: " + text);
             }
         }
 
+        async function register(event) {
+            event.preventDefault();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value.trim();
 
-        window.onload = loadRecipes;
+            const response = await fetch('/ZTI-1.0-SNAPSHOT/api/users/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, passwordHash: password })
+            });
+
+            if (response.ok) {
+                alert("Zarejestrowano. Zaloguj się.");
+            } else {
+                const text = await response.text();
+                alert("Błąd rejestracji: " + text);
+            }
+        }
+
+        async function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+
+            const response = await fetch('/ZTI-1.0-SNAPSHOT/api/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, passwordHash: password })
+            });
+
+            if (response.ok) {
+                currentUser = username;
+                localStorage.setItem('username', username);
+                updateUI();
+                loadRecipes();
+                alert("Zalogowano.");
+            } else {
+                const text = await response.text();
+                alert("Błąd logowania: " + text);
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('username');
+            updateUI();
+            loadRecipes();
+        }
+
+        window.onload = function () {
+            currentUser = localStorage.getItem('username');
+            updateUI();
+            loadRecipes();
+        };
     </script>
-
 </head>
 <body>
 <h1>📒 Aplikacja Kulinarna</h1>
+<p id="user-info"></p>
+<button onclick="logout()">Wyloguj</button>
 
-<h2>➕ Dodaj przepis</h2>
-<form onsubmit="addRecipe(event)">
-    <input id="title" type="text" placeholder="Tytuł" required><br>
-    <textarea id="description" placeholder="Opis" required></textarea><br>
-    <button type="submit">Dodaj</button>
+<h2>🔐 Rejestracja</h2>
+<form onsubmit="register(event)">
+    <input id="reg-username" type="text" placeholder="Login" required><br>
+    <input id="reg-password" type="password" placeholder="Hasło" required><br>
+    <button type="submit">Zarejestruj</button>
 </form>
+
+<h2>🔑 Logowanie</h2>
+<form onsubmit="login(event)">
+    <input id="login-username" type="text" placeholder="Login" required><br>
+    <input id="login-password" type="password" placeholder="Hasło" required><br>
+    <button type="submit">Zaloguj</button>
+</form>
+
+<div id="add-recipe-form" style="display:none;">
+    <h2>➕ Dodaj przepis</h2>
+    <form onsubmit="addRecipe(event)">
+        <input id="title" type="text" placeholder="Tytuł" required><br>
+        <textarea id="description" placeholder="Opis" required></textarea><br>
+        <button type="submit">Dodaj</button>
+    </form>
+</div>
 
 <h2>🍲 Przepisy</h2>
 <div id="recipe-list">Ładowanie...</div>

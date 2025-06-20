@@ -1,10 +1,9 @@
 package com.example.zti.service;
 
 import com.example.zti.model.Recipe;
-
+import com.example.zti.model.User;
 import jakarta.ejb.Stateless;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.*;
 import java.util.List;
 
 @Stateless
@@ -21,10 +20,13 @@ public class RecipeService {
         return em.createQuery("SELECT r FROM Recipe r", Recipe.class).getResultList();
     }
 
-    public void like(Long id) {
-        Recipe recipe = em.find(Recipe.class, id);
-        if (recipe != null) {
-            recipe.setLikes(recipe.getLikes() + 1);
+    public void like(Long recipeId, String username) {
+        Recipe recipe = em.find(Recipe.class, recipeId);
+        User user = em.createQuery("SELECT u FROM User u WHERE u.username = :username", User.class)
+                .setParameter("username", username).getSingleResult();
+
+        if (recipe != null && user != null && !recipe.getLikedByUsers().contains(user)) {
+            recipe.getLikedByUsers().add(user);
             em.merge(recipe);
         }
     }

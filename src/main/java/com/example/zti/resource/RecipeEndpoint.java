@@ -1,27 +1,21 @@
 package com.example.zti.resource;
 
 import com.example.zti.model.Recipe;
+import com.example.zti.model.User;
 import com.example.zti.service.RecipeService;
-
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.*;
+
 import java.util.List;
 
 @Path("/recipes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class RecipeEndpoint {   // zmieniona nazwa klasy
+public class RecipeEndpoint {
 
     @Inject
     private RecipeService recipeService;
-
-    @POST
-    public Response addRecipe(Recipe recipe) {
-        recipeService.save(recipe);
-        return Response.status(Response.Status.CREATED).build();
-    }
 
     @GET
     public List<Recipe> getAll() {
@@ -29,9 +23,22 @@ public class RecipeEndpoint {   // zmieniona nazwa klasy
     }
 
     @POST
-    @Path("/{id}/like")
-    public Response like(@PathParam("id") Long id) {
-        recipeService.like(id);
+    public Response addRecipe(Recipe recipe) {
+        if (recipe.getTitle() == null || recipe.getAuthor() == null || recipe.getAuthor().getUsername() == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Brak tytułu lub autora").build();
+        }
+        recipeService.save(recipe);
         return Response.ok().build();
+    }
+
+    @POST
+    @Path("/{id}/like")
+    public Response like(@PathParam("id") Long id, User user) {
+        try {
+            recipeService.like(id, user.getUsername());
+            return Response.ok().build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Nie można polubić").build();
+        }
     }
 }
