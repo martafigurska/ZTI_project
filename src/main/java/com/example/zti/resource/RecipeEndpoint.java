@@ -3,6 +3,7 @@ package com.example.zti.resource;
 import com.example.zti.model.Recipe;
 import com.example.zti.model.User;
 import com.example.zti.service.RecipeService;
+import com.example.zti.service.UserService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
@@ -22,14 +23,26 @@ public class RecipeEndpoint {
         return recipeService.findAll();
     }
 
+    @Inject
+    private UserService userService;
+
     @POST
     public Response addRecipe(Recipe recipe) {
         if (recipe.getTitle() == null || recipe.getAuthor() == null || recipe.getAuthor().getUsername() == null) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Brak tytułu lub autora").build();
         }
+
+        User managedAuthor = userService.findByUsername(recipe.getAuthor().getUsername());
+        if (managedAuthor == null) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Nie znaleziono autora").build();
+        }
+
+        recipe.setAuthor(managedAuthor);
+
         recipeService.save(recipe);
         return Response.ok().build();
     }
+
 
     @POST
     @Path("/{id}/like")
