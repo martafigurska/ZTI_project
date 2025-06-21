@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista przepisów</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<nav>
+    <button onclick="location.href='index.html'">Logowanie / Rejestracja</button>
+    <button onclick="location.href='add-recipe.html'">Dodaj przepis</button>
+    <button onclick="location.href='recipes.html'">Lista przepisów</button>
+</nav>
+<h1>Przepisy</h1>
+<p id="user-info" style="font-weight: bold; font-size: 1.2em; margin-bottom: 20px;"></p>
+<div id="recipe-list"></div>
+
+<a href="add-recipe.html">Dodaj nowy przepis</a><br>
+<a href="index.html" onclick="localStorage.clear()">Wyloguj</a>
+
+<script>
+    function updateUserInfo() {
+        const username = localStorage.getItem('username');
+        const userInfoElem = document.getElementById('user-info');
+
+        if (!userInfoElem) return;
+
+        if (username) {
+            userInfoElem.textContent = `Zalogowany jako: ${username}`;
+        } else {
+            userInfoElem.textContent = 'Nie jesteś zalogowany';
+        }
+    }
+
+    async function deleteRecipe(id) {
+        if (!confirm("Czy na pewno chcesz usunąć ten przepis?")) return;
+
+        const response = await fetch(`/ZTI-1.0-SNAPSHOT/api/recipes/${id}`, {
+            method: 'DELETE'
+        });
+
+        if (response.ok) {
+            alert("Przepis usunięty.");
+            loadRecipes();
+        } else {
+            const text = await response.text();
+            alert("Błąd usuwania: " + text);
+        }
+    }
+
+    async function loadRecipes() {
+        const response = await fetch('/ZTI-1.0-SNAPSHOT/api/recipes');
+        const recipes = await response.json();
+        const list = document.getElementById('recipe-list');
+        list.innerHTML = '';
+
+        recipes.forEach(recipe => {
+            const item = document.createElement('div');
+            item.innerHTML = `
+                    <h3>${recipe.title}</h3>
+                    <p>${recipe.description}</p>
+                    <p>Autor: ${recipe.author?.username || "nieznany"}</p>
+                    <p>Lajków: ${recipe.likedByUsers?.length || 0}</p>
+                    ${currentUser ? `<button onclick="likeRecipe(${recipe.id})">Lajkuj</button>` : ''}
+                    ${currentUser === recipe.author?.username ? `<button onclick="deleteRecipe(${recipe.id})">Usuń</button>` : ''}
+                    <hr>
+                `;
+            list.appendChild(item);
+        });
+
+    }
+    async function likeRecipe(id) {
+        if (!currentUser) {
+            alert("Zaloguj się, aby lajkować.");
+            return;
+        }
+
+        const response = await fetch(`/ZTI-1.0-SNAPSHOT/api/recipes/${id}/like`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser })
+        });
+
+        if (response.ok) {
+            loadRecipes();
+        } else {
+            const text = await response.text();
+            alert("Błąd: " + text);
+        }
+    }
+    window.onload = function () {
+        currentUser = localStorage.getItem('username');
+        updateUserInfo(); // Nowa funkcja do info pod tytułem
+        loadRecipes();    // Załaduj i pokaż przepisy
+    };
+</script>
+</body>
+</html>

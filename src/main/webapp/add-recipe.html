@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Dodaj przepis</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<nav>
+    <button onclick="location.href='index.html'">Logowanie / Rejestracja</button>
+    <button onclick="location.href='add-recipe.html'">Dodaj przepis</button>
+    <button onclick="location.href='recipes.html'">Lista przepisów</button>
+</nav>
+<div id="reg">
+<h1>Dodaj przepis</h1>
+<p id="user-info" style="font-weight: bold; font-size: 1.2em; margin-bottom: 20px;"></p>
+
+    <form id="recipeForm">
+        <input id="title" name="title" placeholder="Tytuł przepisu" required><br>
+        <textarea id="description" name="description" placeholder="Opis przepisu" required></textarea><br>
+        <button type="submit">Dodaj przepis</button>
+    </form>
+</div>
+
+<a href="index.html" onclick="localStorage.clear()">Wyloguj</a>
+<script>
+
+        const currentUser = localStorage.getItem('username');
+
+        function updateUserInfo() {
+            const userInfoElem = document.getElementById('user-info');
+            if (!userInfoElem) return;
+
+            if (currentUser) {
+                userInfoElem.textContent = `Zalogowany jako: ${currentUser}`;
+            } else {
+                userInfoElem.textContent = 'Nie jesteś zalogowany';
+            }
+        }
+
+        async function addRecipe(event) {
+        event.preventDefault();
+
+        if (!currentUser) {
+        alert("Musisz być zalogowany, aby dodać przepis.");
+        return;
+    }
+
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+
+        if (!title || !description) {
+        alert("Uzupełnij pola!");
+        return;
+    }
+
+        const response = await fetch('/ZTI-1.0-SNAPSHOT/api/recipes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+        title,
+        description,
+        author: { username: currentUser }
+    })
+    });
+
+        if (response.ok) {
+        alert("Przepis dodany pomyślnie!");
+        document.getElementById('title').value = '';
+        document.getElementById('description').value = '';
+    } else {
+        const text = await response.text();
+        alert("Błąd: " + text);
+    }
+    }
+        window.onload = function () {
+        updateUserInfo();
+        document.getElementById('recipeForm').addEventListener('submit', addRecipe);
+    };
+</script>
+</body>
+</html>
