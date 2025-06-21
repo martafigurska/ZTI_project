@@ -24,7 +24,6 @@ public class RecipeService {
 
 //    @Transactional
 //    public void delete(Recipe recipe) {
-//        // Upewnij się, że encja jest zarządzana
 //        Recipe managed = em.contains(recipe) ? recipe : em.merge(recipe);
 //        em.remove(managed);
 //    }
@@ -38,9 +37,9 @@ public class RecipeService {
         }
     }
 
-    public List<Recipe> findAll() {
-        return em.createQuery("SELECT r FROM Recipe r", Recipe.class).getResultList();
-    }
+//    public List<Recipe> findAll() {
+//        return em.createQuery("SELECT r FROM Recipe r", Recipe.class).getResultList();
+//    }
 
     public List<Recipe> findAllWithLikes() {
         return em.createQuery(
@@ -48,6 +47,7 @@ public class RecipeService {
                 Recipe.class
         ).getResultList();
     }
+
     public void like(Long recipeId, String username) {
         Recipe recipe = em.find(Recipe.class, recipeId);
         User user = em.createQuery("SELECT u FROM User u WHERE u.username = :username", User.class)
