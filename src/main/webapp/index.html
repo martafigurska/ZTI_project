@@ -2,7 +2,8 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
-    <title>Moje Przepisy</title>
+    <title>Przepisy</title>
+    <link rel="stylesheet" href="styles.css" />
     <script>
         let currentUser = null;
 
@@ -11,6 +12,21 @@
                 ? `Zalogowany jako: ${currentUser}`
                 : 'Nie jesteś zalogowany';
             document.getElementById('add-recipe-form').style.display = currentUser ? 'block' : 'none';
+        }
+        async function deleteRecipe(id) {
+            if (!confirm("Czy na pewno chcesz usunąć ten przepis?")) return;
+
+            const response = await fetch(`/ZTI-1.0-SNAPSHOT/api/recipes/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert("Przepis usunięty.");
+                loadRecipes();
+            } else {
+                const text = await response.text();
+                alert("Błąd usuwania: " + text);
+            }
         }
 
         async function loadRecipes() {
@@ -24,12 +40,15 @@
                 item.innerHTML = `
                     <h3>${recipe.title}</h3>
                     <p>${recipe.description}</p>
+                    <p>Autor: ${recipe.author?.username || "nieznany"}</p>
                     <p>Lajków: ${recipe.likedByUsers?.length || 0}</p>
                     ${currentUser ? `<button onclick="likeRecipe(${recipe.id})">Lajkuj</button>` : ''}
+                    ${currentUser === recipe.author?.username ? `<button onclick="deleteRecipe(${recipe.id})">Usuń</button>` : ''}
                     <hr>
                 `;
                 list.appendChild(item);
             });
+
         }
 
         async function likeRecipe(id) {
@@ -144,7 +163,7 @@
     </script>
 </head>
 <body>
-<h1>📒 Aplikacja Kulinarna</h1>
+<h1>📒 Przepisowo </h1>
 <p id="user-info"></p>
 <button onclick="logout()">Wyloguj</button>
 

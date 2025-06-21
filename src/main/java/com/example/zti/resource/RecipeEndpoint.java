@@ -5,6 +5,7 @@ import com.example.zti.model.User;
 import com.example.zti.service.RecipeService;
 import com.example.zti.service.UserService;
 import jakarta.inject.Inject;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.*;
 
@@ -41,6 +42,19 @@ public class RecipeEndpoint {
 
         recipeService.save(recipe);
         return Response.ok().build();
+    }
+
+    @DELETE
+    @Path("/{id}")
+    public Response deleteRecipe(@PathParam("id") Long id) {
+        try {
+            recipeService.deleteRecipeById(id);
+            return Response.noContent().build();
+        } catch (EntityNotFoundException e) {
+            return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+        } catch (Exception e) {
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Błąd serwera: " + e.getMessage()).build();
+        }
     }
 
 
