@@ -11,7 +11,7 @@ public class RestApplication extends Application {
     public Set<Class<?>> getClasses() {
         Set<Class<?>> classes = new HashSet<>();
         classes.add(com.example.zti.resource.RecipeEndpoint.class);
-        classes.add(com.example.zti.resource.AuthResource.class); // ← to było brakujące!
+        classes.add(com.example.zti.resource.AuthResource.class);
         return classes;
     }
 }

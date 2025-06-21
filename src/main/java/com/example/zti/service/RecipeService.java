@@ -20,6 +20,11 @@ public class RecipeService {
         return em.createQuery("SELECT r FROM Recipe r", Recipe.class).getResultList();
     }
 
+    public List<Recipe> findAllWithLikes() {
+        return em.createQuery(
+                "SELECT DISTINCT r FROM Recipe r LEFT JOIN FETCH r.likedByUsers", Recipe.class
+        ).getResultList();
+    }
     public void like(Long recipeId, String username) {
         Recipe recipe = em.find(Recipe.class, recipeId);
         User user = em.createQuery("SELECT u FROM User u WHERE u.username = :username", User.class)

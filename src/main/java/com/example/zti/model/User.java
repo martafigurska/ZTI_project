@@ -1,5 +1,6 @@
 package com.example.zti.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -20,7 +21,9 @@ public class User {
     private List<Recipe> recipes;
 
     @ManyToMany(mappedBy = "likedByUsers")
+    @JsonBackReference
     private List<Recipe> likedRecipes;
+
     // Gettery i settery
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

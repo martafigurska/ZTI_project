@@ -1,6 +1,10 @@
 package com.example.zti.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -17,7 +21,14 @@ public class Recipe {
     private User author;
 
     @ManyToMany
-    private List<User> likedByUsers;
+    @JoinTable(
+            name = "recipe_likes",
+            joinColumns = @JoinColumn(name = "recipe_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @JsonIgnoreProperties({"recipes", "passwordHash"}) // ukryj pola z User
+    private List<User> likedByUsers = new ArrayList<>();
+
 
     // Gettery i settery
     public Long getId() { return id; }

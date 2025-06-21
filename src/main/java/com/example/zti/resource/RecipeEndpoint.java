@@ -20,7 +20,7 @@ public class RecipeEndpoint {
 
     @GET
     public List<Recipe> getAll() {
-        return recipeService.findAll();
+        return recipeService.findAllWithLikes();
     }
 
     @Inject
