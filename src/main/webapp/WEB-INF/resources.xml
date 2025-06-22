@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <Resource id="MySqlDS" type="DataSource">
+        JdbcDriver com.mysql.cj.jdbc.Driver
+        JdbcUrl jdbc:mysql://mysql:3306/kulinaria?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true
+        UserName appuser
+        Password tajnehaslo
+        JtaManaged true
+        InitialSize 5
+        MaxActive 20
+        MaxIdle 10
+        MinIdle 1
+        MaxWait 30000
+        TestOnBorrow true
+        TestWhileIdle true
+        TimeBetweenEvictionRunsMillis 30000
+        ValidationQuery SELECT 1
+    </Resource>
+</resources> 

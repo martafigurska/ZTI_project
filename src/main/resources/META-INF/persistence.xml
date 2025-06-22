@@ -3,6 +3,18 @@
              version="3.0">
     <persistence-unit name="kulinariaPU" transaction-type="JTA">
         <jta-data-source>MySqlDS</jta-data-source>
-
+        <class>com.example.zti.model.User</class>
+        <class>com.example.zti.model.Recipe</class>
+        <properties>
+            <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://mysql:3306/kulinaria?useSSL=false&amp;serverTimezone=UTC&amp;allowPublicKeyRetrieval=true"/>
+            <property name="jakarta.persistence.jdbc.user" value="appuser"/>
+            <property name="jakarta.persistence.jdbc.password" value="tajnehaslo"/>
+            
+            <property name="eclipselink.ddl-generation" value="create-or-extend-tables"/>
+            <property name="eclipselink.ddl-generation.output-mode" value="database"/>
+            <property name="eclipselink.logging.level" value="INFO"/>
+            <property name="eclipselink.logging.parameters" value="true"/>
+        </properties>
     </persistence-unit>
 </persistence>

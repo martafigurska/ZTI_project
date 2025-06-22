@@ -22,7 +22,7 @@
     </form>
 
     <h1>Zarejestruj się</h1>
-    <form>
+    <form id="registerForm">
         <input name="username" placeholder="Login" required><br>
         <input name="password" type="password" placeholder="Hasło" required><br>
         <button type="submit">Zarejestruj</button>
@@ -30,58 +30,92 @@
 </div>
 <a href="index.html" onclick="localStorage.clear()">Wyloguj</a>
 <script>
-    const currentUser = localStorage.getItem('username');
-
     function updateUserInfo() {
         const userInfoElem = document.getElementById('user-info');
-        if (!userInfoElem) return;
+        const currentUser = localStorage.getItem('username');
 
-        if (currentUser) {
-            userInfoElem.textContent = `Zalogowany jako: ${currentUser}`;
-        } else {
-            userInfoElem.textContent = 'Nie jesteś zalogowany';
+        if (userInfoElem) {
+            if (currentUser) {
+                userInfoElem.textContent = `Zalogowany jako: ${currentUser}`;
+            } else {
+                userInfoElem.textContent = 'Nie jesteś zalogowany';
+            }
         }
     }
 
-    document.getElementById('loginForm').onsubmit = async e => {
+    document.getElementById('loginForm').onsubmit = async function(e) {
         e.preventDefault();
+
+        const username = e.target.username.value;
+        const password = e.target.password.value;
+
+        if (!username || !password) {
+            alert('Wprowadź login i hasło');
+            return;
+        }
+
         const body = {
-            username: e.target.username.value,
-            passwordHash: e.target.password.value
+            username: username,
+            passwordHash: password
         };
-        const res = await fetch('/ZTI-1.0-SNAPSHOT/api/users/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (res.ok) {
-            localStorage.setItem('username', body.username);
-            window.location.href = 'recipes.html';
-        } else {
-            alert('Błąd logowania');
+
+        try {
+            const res = await fetch('/ZTI-1.0-SNAPSHOT/api/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                localStorage.setItem('username', username);
+                alert('Zalogowano pomyślnie!');
+                window.location.href = 'recipes.html';
+            } else {
+                alert('Błąd logowania - sprawdź login i hasło');
+            }
+        } catch (error) {
+            alert('Błąd połączenia z serwerem');
         }
     };
 
-    document.getElementById('registerForm').onsubmit = async e => {
+    document.getElementById('registerForm').onsubmit = async function(e) {
         e.preventDefault();
+
+        const username = e.target.username.value;
+        const password = e.target.password.value;
+
+        if (!username || !password) {
+            alert('Wprowadź login i hasło');
+            return;
+        }
+
         const body = {
-            username: e.target.username.value,
-            passwordHash: e.target.password.value
+            username: username,
+            passwordHash: password
         };
-        const res = await fetch('/ZTI-1.0-SNAPSHOT/api/users/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body)
-        });
-        if (res.ok) {
-            alert('Rejestracja zakończona. Zaloguj się.');
-        } else {
-            alert('Użytkownik już istnieje.');
+
+        try {
+            const res = await fetch('/ZTI-1.0-SNAPSHOT/api/users/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (res.ok) {
+                alert('Rejestracja zakończona pomyślnie! Możesz się teraz zalogować.');
+                e.target.reset();
+            } else if (res.status === 409) {
+                console.log(`BODY: ${JSON.stringify(body)}`);
+                alert('Użytkownik o tym loginie już istnieje. Wybierz inny login.');
+            } else {
+                alert('Błąd rejestracji');
+            }
+        } catch (error) {
+            alert('Błąd połączenia z serwerem');
         }
     };
 
-    window.onload = function () {
-        currentUser = localStorage.getItem('username');
+    window.onload = function() {
         updateUserInfo();
     };
 </script>
