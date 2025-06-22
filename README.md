@@ -2,8 +2,7 @@
 
 1. **Start the app:**
    ```bash
-   ./mvnw clean package -DskipTests
-   docker-compose up
+   docker-compose up --build
    ```
 
 ## Database Details
